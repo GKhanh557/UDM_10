@@ -18,15 +18,14 @@
   header dang text `ULD1 <ten_file_percent_encoded> <kich_thuoc>\n`, theo sau la du lieu
   nhi phan tho cua file. Mo ta chi tiet: Dinh nghia giao thuc truyen file dung chung cho Server va Client.
 
-Mô tả giao thức (mô tả này dùng để viết vào báo cáo, mục "Cấu trúc message"):
-
-Mỗi lần upload 1 file sẽ dùng 1 kết nối TCP riêng (1 file = 1 socket).
-Sau khi kết nối thành công, Client gửi 1 dòng HEADER dạng text, kết thúc bằng '\n':
+Mo ta giao thuc (mo ta nay dung de viet vao bao cao, muc "Cau truc message"):
+Moi lan upload 1 file se dung 1 ket noi TCP rieng (1 file = 1 socket).
+Sau khi ket noi thanh cong, Client gui 1 dong HEADER dang text, ket thuc bang '\n':
 ULD1 <fileName_percent_encoded> <fileSize>\n
-Trong đó:
-- "ULD1": magic string để Server nhận diện đúng giao thức (version 1)
-- fileName_percent_encoded : tên file (không kèm đường dẫn), đã percent-encode (giống encode URL) để tránh lỗi khi tên file có khoảng trắng hoặc ký tự đặc biệt / tiếng Việt.
-- fileSize: kích thước file tính theo byte (số nguyên)
-Ngay sau dòng header, Client gửi liên tục đúng fileSize byte dữ liệu nhị phân của file. Server đọc đủ fileSize byte thì coi như nhận file xong.
-Ví dụ header thực tế:
+Trong do:
+- "ULD1": magic string de Server nhan dien dung giao thuc (version 1)
+- fileName_percent_encoded : ten file (khong kem duong dan), da percent-encode (giong encode URL) de tranh loi khi ten file co khoang trang hoac ky tu dac biet / tieng Viet.
+- fileSize: kich thuoc file tinh theo byte (so nguyen)
+Ngay sau dong header, Client gui lien tuc dung fileSize byte du lieu nhi phan cua file. Server doc du fileSize byte thi coi nhu nhan file xong.
+Vi du header thuc te:
 ULD1 bao%20cao.pdf 1048576\n
