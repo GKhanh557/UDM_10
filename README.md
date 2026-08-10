@@ -4,10 +4,10 @@
 
 | STT | Ho Và Ten | MSSV | tai khoan github | Vai Tro |
 
-| Nguyen Duong Gia Khanh | 056307008420 | @Gkhanh557 | Truong nhom
-| Huynh Xuan Canh | 056206010544 | @canh0502 | Thanh Vien
-| Nguyen Huu Quoc Huy | 056207008300 | @username_huy | Thanh Vien
-| Nguyen Quoc Thanh | 060207007400 | @nguyenquocthanh599-png | Thanh Vien
+| 1 | Nguyen Duong Gia Khanh | 056307008420 | @Gkhanh557 | Truong nhom
+| 2 | Huynh Xuan Canh | 056206010544 | @canh0502 | Thanh Vien
+| 3 | Nguyen Huu Quoc Huy | 056207008300 | @username_huy | Thanh Vien
+| 4 | Nguyen Quoc Thanh | 060207007400 | @nguyenquocthanh599-png | Thanh Vien
 
 ## Kiến trúc hệ thống
 
