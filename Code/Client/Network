@@ -1,0 +1,56 @@
+#pragma once
+
+#include <QObject>
+#include <QTcpSocket>
+#include <QFile>
+#include <QElapsedTimer>
+#include <QTimer>
+
+// FileUploadTask: quáº£n lÃ½ viá»‡c upload Má»˜T file lÃªn Server qua má»™t káº¿t ná»‘i TCP riÃªng.
+// ClientWindow sáº½ táº¡o nhiá»u FileUploadTask (giá»›i háº¡n sá»‘ lÆ°á»£ng cháº¡y Ä‘á»“ng thá»i) Ä‘á»ƒ
+// upload nhiá»u file cÃ¹ng lÃºc, má»—i task Ä‘á»™c láº­p -> lá»—i 1 file khÃ´ng áº£nh hÆ°á»Ÿng file khÃ¡c.
+class FileUploadTask : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit FileUploadTask(const QString &filePath, QObject *parent = nullptr);
+
+    QString filePath() const { return m_filePath; }
+    QString fileName() const { return m_fileName; }
+    qint64 fileSize() const { return m_fileSize; }
+
+public slots:
+    void start(const QString &host, quint16 port);
+    void cancel();
+
+signals:
+    void statusChanged(const QString &status);
+    void progressChanged(qint64 sent, qint64 total);
+    void speedChanged(double bytesPerSec);
+    void finished(bool success, const QString &message);
+
+private slots:
+    void onConnected();
+    void onBytesWritten(qint64 bytes);
+    void onErrorOccurred(QAbstractSocket::SocketError err);
+    void onConnectTimeout();
+
+private:
+    void writeNextChunk();
+    void fail(const QString &reason);
+
+    QString m_filePath;
+    QString m_fileName;
+    qint64  m_fileSize = 0;
+
+    QTcpSocket *m_socket = nullptr;
+    QFile m_file;
+    QTimer m_connectTimer;
+    QElapsedTimer m_speedTimer;
+
+    qint64 m_bytesSent = 0;
+    qint64 m_bytesSentSinceLastTick = 0;
+    bool m_headerSent = false;
+    bool m_finishedEmitted = false;
+};
