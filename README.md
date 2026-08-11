@@ -29,3 +29,4 @@ Trong do:
 Ngay sau dong header, Client gui lien tuc dung fileSize byte du lieu nhi phan cua file. Server doc du fileSize byte thi coi nhu nhan file xong.
 Vi du header thuc te:
 ULD1 bao%20cao.pdf 1048576\n
+
