@@ -6,29 +6,26 @@
 #include <QString>
 #include <QByteArray>
 
-// Moi khi có Client kết nối để upload 1 file, Server sẽ tạo 1 ClientHandler
-// riêng cho kết nối đó. Nhờ vậy lỗi ở 1 file/1 kết nối không ảnh hưởng
-// đến các file/kết nối khác đang chạy đồng thời (đáp ứng yêu cầu đề bài).
+// Moi khi co Client ket noi de upload 1 file, Server se tao 1 ClientHandler
+// rieng cho ket noi do. Nho vay loi o 1 file/1 ket noi khong anh huong
+// den cac file/ket noi khac dang chay dong thoi (dap ung yeu cau de bai).
 class ClientHandler : public QObject
 {
     Q_OBJECT
 
 public:
-    // socket: lấy trực tiếp từ QTcpServer::nextPendingConnection(), ClientHandler
-    //         sẽ nhận sở hữu (reparent) socket này.
-    // saveDir: thư mục Server sẽ lưu file nhận được
     explicit ClientHandler(QTcpSocket *socket, const QString &saveDir, QObject *parent = nullptr);
     ~ClientHandler() override;
 
     QString clientAddress() const;
 
 signals:
-    // Phát ra mỗi khi có sự kiện cần ghi log / hiển thị lên GUI Server
-    // status ví dụ: "Đang nhận", "Hoàn tất", "Lỗi"
+    // Phat ra moi khi co su kien can ghi log / hien thi len GUI Server
+    // status vi du: "Dang nhan", "Hoan tat", "Loi"
     void logEvent(const QString &clientAddr, const QString &fileName,
                   const QString &status, const QString &detail);
 
-    // Phát ra khi handler đã xử lý xong (thành công hoặc lỗi), có thể xoá an toàn
+    // Phat ra khi handler da xu ly xong (thanh cong hoac loi), co the xoa an toan
     void finishedHandling();
 
 private slots:
@@ -50,9 +47,9 @@ private:
 
     State m_state = State::ReadingHeader;
 
-    QString m_fileName;      // tên file gốc (đã giải mã)
-    QString m_finalPath;     // đường dẫn cuối cùng sẽ lưu (đã xử lý trùng tên)
-    QString m_tempPath;      // đường dẫn file tạm trong lúc đang nhận
+    QString m_fileName;      // ten file goc (da giai ma)
+    QString m_finalPath;     // duonng dan cuoi cung se luu (da xu ly trung ten)
+    QString m_tempPath;      // duonng dan file tam trong luc dang nhan
     qint64  m_fileSize = 0;
     qint64  m_bytesReceived = 0;
 
