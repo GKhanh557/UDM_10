@@ -6,8 +6,7 @@
 #include <QString>
 #include <QByteArray>
 
-// ClientHandler: quản lý một kết nối TCP dùng để nhận đúng MỘT file.
-// Mỗi khi có Client kết nối để upload 1 file, Server sẽ tạo 1 ClientHandler
+// Moi khi có Client kết nối để upload 1 file, Server sẽ tạo 1 ClientHandler
 // riêng cho kết nối đó. Nhờ vậy lỗi ở 1 file/1 kết nối không ảnh hưởng
 // đến các file/kết nối khác đang chạy đồng thời (đáp ứng yêu cầu đề bài).
 class ClientHandler : public QObject
