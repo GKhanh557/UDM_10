@@ -15,11 +15,9 @@ QT_END_NAMESPACE
 
 class FileUploadTask;
 
-// ClientWindow: cửa sổ chính phía Client.
-// - Cho phép kéo-thả (drag & drop) hoặc chọn nhiều file vào hàng đợi.
-// - Mỗi file có trạng thái riêng: Chờ / Đang tải lên / Hoàn tất / Lỗi.
-// - Giới hạn số file upload đồng thời (cấu hình được), phần còn lại xếp hàng đợi.
-// - Lỗi 1 file không làm dừng các file khác.
+// - Cho phep keo-tha (drag & drop) hoac chon nhieu file vao hang doi.
+// - Gioi han so file upload dong thoi (cau hinh duoc), phan còn lai xep hang doi.
+// - Loi 1 file khong lam dung cac file khac.
 class ClientWindow : public QMainWindow
 {
     Q_OBJECT
