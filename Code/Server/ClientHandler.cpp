@@ -11,7 +11,7 @@ ClientHandler::ClientHandler(QTcpSocket *socket, const QString &saveDir, QObject
     , m_socket(socket)
     , m_saveDir(saveDir)
 {
-    m_socket->setParent(this); // ClientHandler nhan so huu socket
+    m_socket->setParent(this); 
     m_clientAddr = QStringLiteral("%1:%2")
                         .arg(m_socket->peerAddress().toString())
                         .arg(m_socket->peerPort());
@@ -36,7 +36,6 @@ QString ClientHandler::clientAddress() const
 
 void ClientHandler::onReadyRead()
 {
-    // Buoc 1: doc dong header (ket thuc bang '\n')
     while (m_state == State::ReadingHeader && m_socket->canReadLine()) {
         const QByteArray line = m_socket->readLine();
         if (!tryParseHeaderLine(line)) {
@@ -45,7 +44,6 @@ void ClientHandler::onReadyRead()
         }
     }
 
-    // Buoc 2: sau khi co header hop le, phan con lai la du lieu file tho
     if (m_state == State::ReadingData) {
         const QByteArray chunk = m_socket->readAll();
         if (!chunk.isEmpty()) {
@@ -66,7 +64,6 @@ void ClientHandler::onReadyRead()
 
 bool ClientHandler::tryParseHeaderLine(const QByteArray &line)
 {
-    // Dinh dang: "ULD1 <fileName_percent_encoded> <fileSize>\n"
     QByteArray trimmed = line;
     while (trimmed.endsWith('\n') || trimmed.endsWith('\r'))
         trimmed.chop(1);
@@ -86,7 +83,6 @@ bool ClientHandler::tryParseHeaderLine(const QByteArray &line)
     if (decodedName.isEmpty())
         return false;
 
-    // Chi lay ten file, loai bo moi thong tin duong dan de tranh path traversal
     const QString safeName = QFileInfo(decodedName).fileName();
     if (safeName.isEmpty())
         return false;
@@ -107,7 +103,6 @@ bool ClientHandler::tryParseHeaderLine(const QByteArray &line)
     emit logEvent(m_clientAddr, m_fileName, QStringLiteral("Dang nhan"),
                   QStringLiteral("Kich thuoc: %1 bytes").arg(m_fileSize));
 
-    // Truong hop fileSize = 0 (file rong): hoan tat ngay
     if (m_fileSize == 0) {
         finishSuccess();
     }
@@ -116,8 +111,6 @@ bool ClientHandler::tryParseHeaderLine(const QByteArray &line)
 
 QString ClientHandler::resolveDuplicateName(const QString &dir, const QString &fileName) const
 {
-    // Quy tac xu ly file trung ten: neu file da ton tai, them hau to (1), (2), ...
-    // truoc phan mo rong, vi du: report.pdf -> report (1).pdf
     QDir d(dir);
     if (!d.exists(fileName))
         return fileName;
@@ -143,7 +136,7 @@ void ClientHandler::finishSuccess()
     m_state = State::Done;
     m_outFile.close();
 
-    QFile::remove(m_finalPath); // phong truong hop race condition hiem gap
+    QFile::remove(m_finalPath);
     if (!QFile::rename(m_tempPath, m_finalPath)) {
         emit logEvent(m_clientAddr, m_fileName, QStringLiteral("Loi"),
                       QStringLiteral("Khong the doi ten file tam sang file hoan chinh"));
@@ -164,7 +157,7 @@ void ClientHandler::failWithError(const QString &reason)
     if (m_outFile.isOpen())
         m_outFile.close();
     if (!m_tempPath.isEmpty())
-        QFile::remove(m_tempPath); // xoa file tam do dang, khong cong nhan la file hoan chinh
+        QFile::remove(m_tempPath); 
 
     emit logEvent(m_clientAddr, m_fileName.isEmpty() ? QStringLiteral("(khong xac dinh)") : m_fileName,
                   QStringLiteral("Loi"), reason);
@@ -175,7 +168,6 @@ void ClientHandler::failWithError(const QString &reason)
 void ClientHandler::onDisconnected()
 {
     if (m_state == State::ReadingHeader || m_state == State::ReadingData) {
-        // Client ngat ket noi dot ngot giua chung -> coi la loi, don dep file tam
         failWithError(QStringLiteral("Client ngat ket noi truoc khi truyen xong"));
     }
     m_socket->deleteLater();
