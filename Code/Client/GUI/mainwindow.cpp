@@ -45,8 +45,8 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(central);
 
     m_manager = new UploadManager(this);
-    m_manager->setServerAddress(QStringLiteral("127.0.0.1"), 5000); // TODO: lấy từ ô nhập cấu hình
-    m_manager->setMaxConcurrentUploads(2); // giới hạn số file upload đồng thời — nhóm tự công bố con số này
+    m_manager->setServerAddress(QStringLiteral("127.0.0.1"), 5000); 
+    m_manager->setMaxConcurrentUploads(2); 
 
     connect(m_manager, &UploadManager::fileQueued, this, &MainWindow::onFileQueued);
     connect(m_manager, &UploadManager::fileStatus, this, &MainWindow::onFileStatus);
@@ -68,7 +68,7 @@ void MainWindow::dropEvent(QDropEvent *event)
             paths << url.toLocalFile();
     }
     if (!paths.isEmpty())
-        m_manager->addFiles(paths); // hỗ trợ thả nhiều file cùng lúc
+        m_manager->addFiles(paths); 
 }
 
 int MainWindow::rowForFile(const QString &filePath) const
@@ -101,7 +101,6 @@ void MainWindow::onFileStatus(const QString &filePath, const QString &status)
     if (row < 0) return;
     m_table->item(row, ColStatus)->setText(status);
 
-    // Lỗi của file này chỉ tô đỏ đúng dòng của nó, các dòng khác không bị ảnh hưởng.
     const bool isError = status.startsWith(QStringLiteral("Lỗi"));
     m_table->item(row, ColStatus)->setForeground(isError ? Qt::red : Qt::black);
 }
@@ -126,7 +125,6 @@ void MainWindow::onFileFinished(const QString &filePath, bool success)
     if (auto *bar = qobject_cast<QProgressBar *>(m_table->cellWidget(row, ColProgress))) {
         bar->setValue(success ? 100 : bar->value());
     }
-    // Trạng thái cuối cùng ("Hoàn tất" / "Lỗi: ..." / "Đã hủy") đã được set qua onFileStatus.
 }
 
 QString MainWindow::formatBytes(qint64 bytes)
