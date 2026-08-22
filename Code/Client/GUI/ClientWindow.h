@@ -15,9 +15,6 @@ QT_END_NAMESPACE
 
 class FileUploadTask;
 
-// - Cho phep keo-tha (drag & drop) hoac chon nhieu file vao hang doi.
-// - Gioi han so file upload dong thoi (cau hinh duoc), phan còn lai xep hang doi.
-// - Loi 1 file khong lam dung cac file khac.
 class ClientWindow : public QMainWindow
 {
     Q_OBJECT
