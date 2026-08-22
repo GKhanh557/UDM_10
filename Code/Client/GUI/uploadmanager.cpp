@@ -6,7 +6,6 @@
 UploadManager::UploadManager(QObject *parent)
     : QObject(parent)
 {
-    // Mặc định: 2 file upload đồng thời, các file còn lại tự xếp hàng.
     m_pool.setMaxThreadCount(2);
 }
 
@@ -40,7 +39,6 @@ void UploadManager::addFiles(const QStringList &filePaths)
         auto *worker = new UploadWorker(path, m_host, m_port);
         m_activeWorkers[path] = worker;
 
-        // QueuedConnection mặc định vì worker chạy ở thread khác GUI thread.
         connect(worker, &UploadWorker::started, this, &UploadManager::fileStarted);
         connect(worker, &UploadWorker::progressChanged, this, &UploadManager::fileProgress);
         connect(worker, &UploadWorker::statusChanged, this, &UploadManager::fileStatus);
@@ -49,9 +47,7 @@ void UploadManager::addFiles(const QStringList &filePaths)
                     m_activeWorkers.remove(filePath);
                     emit fileFinished(filePath, success);
                 });
-
-        // start() sẽ tự chạy ngay nếu còn "slot" trống, hoặc xếp vào hàng đợi
-        // nội bộ của QThreadPool nếu đã đủ maxThreadCount() worker đang chạy.
+        
         m_pool.start(worker);
     }
 }
