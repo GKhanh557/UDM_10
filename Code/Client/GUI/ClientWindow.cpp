@@ -53,7 +53,6 @@ void ClientWindow::setupUi()
     auto *central = new QWidget(this);
     auto *mainLayout = new QVBoxLayout(central);
 
-    // ---- Hàng cấu hình: địa chỉ server + giới hạn upload đồng thời ----
     auto *configLayout = new QHBoxLayout();
 
     configLayout->addWidget(new QLabel(QStringLiteral("Server:"), central));
@@ -69,7 +68,7 @@ void ClientWindow::setupUi()
     configLayout->addWidget(new QLabel(QStringLiteral("Số file upload cùng lúc:"), central));
     m_maxConcurrentSpin = new QSpinBox(central);
     m_maxConcurrentSpin->setRange(1, 10);
-    m_maxConcurrentSpin->setValue(2); // nhóm công bố giới hạn mặc định = 2
+    m_maxConcurrentSpin->setValue(2);
     configLayout->addWidget(m_maxConcurrentSpin);
 
     configLayout->addStretch();
@@ -83,13 +82,11 @@ void ClientWindow::setupUi()
 
     mainLayout->addLayout(configLayout);
 
-    // ---- Gợi ý kéo-thả ----
     m_dropHintLabel = new QLabel(QStringLiteral("Kéo-thả 1 hoặc nhiều file vào đây để thêm vào hàng đợi upload"), central);
     m_dropHintLabel->setAlignment(Qt::AlignCenter);
     m_dropHintLabel->setStyleSheet(QStringLiteral("padding: 10px; border: 2px dashed #888; color: #666;"));
     mainLayout->addWidget(m_dropHintLabel);
 
-    // ---- Bảng theo dõi từng file ----
     m_table = new QTableWidget(0, ColCount, central);
     m_table->setHorizontalHeaderLabels({
         QStringLiteral("Tên file"), QStringLiteral("Kích thước"),
@@ -116,7 +113,6 @@ void ClientWindow::dragEnterEvent(QDragEnterEvent *event)
 
 void ClientWindow::dropEvent(QDropEvent *event)
 {
-    // Hỗ trợ kéo-thả NHIỀU file cùng lúc.
     for (const QUrl &url : event->mimeData()->urls()) {
         if (url.isLocalFile())
             addFileToQueue(url.toLocalFile());
@@ -219,7 +215,6 @@ void ClientWindow::startTaskForRow(int row)
                     m_rows[row].task = nullptr;
                 }
                 --m_runningCount;
-                // 1 file xong (dù lỗi hay thành công) -> nhường slot cho file kế tiếp trong hàng đợi.
                 tryStartNextTasks();
             });
 
@@ -228,7 +223,6 @@ void ClientWindow::startTaskForRow(int row)
 
 void ClientWindow::onClearFinishedClicked()
 {
-    // Xóa từ cuối lên đầu để không lệch index khi removeRow().
     for (int i = m_rows.size() - 1; i >= 0; --i) {
         if (m_rows[i].finished) {
             m_table->removeRow(m_rows[i].rowIndex);
