@@ -9,13 +9,6 @@
 
 class UploadWorker;
 
-// UploadManager là lớp trung tâm nối GUI với các UploadWorker.
-//
-// Cách xử lý hàng đợi + giới hạn upload đồng thời:
-//   QThreadPool.setMaxThreadCount(N) quyết định tối đa N worker chạy song
-//   song; các file thêm vào sau khi đã đủ N sẽ tự động nằm trong hàng đợi
-//   nội bộ của QThreadPool và được chạy dần khi có "slot" trống — không cần
-//   tự cài đặt hàng đợi thủ công.
 class UploadManager : public QObject
 {
     Q_OBJECT
@@ -25,14 +18,11 @@ public:
 
     void setServerAddress(const QString &host, quint16 port);
 
-    // Số nhóm tối đa cho phép upload cùng lúc (theo đề bài, nhóm tự công bố).
     void setMaxConcurrentUploads(int maxConcurrent);
     int maxConcurrentUploads() const;
 
-    // Thêm 1 hoặc nhiều file vào hàng đợi upload.
     void addFiles(const QStringList &filePaths);
 
-    // Hủy 1 file đang tải hoặc đang chờ trong hàng đợi.
     void cancelFile(const QString &filePath);
 
 signals:
@@ -47,6 +37,5 @@ private:
     QString m_host = QStringLiteral("127.0.0.1");
     quint16 m_port = 5000;
 
-    // Theo dõi worker đang chạy để có thể cancel() từ GUI.
     QMap<QString, QPointer<UploadWorker>> m_activeWorkers;
 };
