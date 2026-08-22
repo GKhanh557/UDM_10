@@ -20,7 +20,6 @@ FileUploadTask::~FileUploadTask()
 
 QByteArray FileUploadTask::percentEncodeFileName(const QString &name)
 {
-    // percent-encode giống encode URL, tránh lỗi khoảng trắng / tiếng Việt / ký tự đặc biệt
     return QUrl::toPercentEncoding(name);
 }
 
@@ -58,21 +57,16 @@ void FileUploadTask::cancel()
 
 void FileUploadTask::onConnected()
 {
-    // ---- Gửi header: ULD1 <ten_encoded> <kich_thuoc>\n ----
     const QFileInfo info(m_filePath);
     const QByteArray header = "ULD1 " + percentEncodeFileName(info.fileName())
                              + ' ' + QByteArray::number(m_fileSize) + '\n';
     m_socket->write(header);
-    // Không cần chờ header flush riêng: bytesWritten() sẽ báo khi buffer trống,
-    // lúc đó sendNextChunk() bắt đầu đẩy dữ liệu file.
 }
 
-void FileUploadTask::onBytesWritten(qint64 /*bytes*/)
+void FileUploadTask::onBytesWritten(qint64)
 {
     if (m_cancelled || m_done) return;
 
-    // Chỉ nạp thêm dữ liệu khi socket đã gửi hết phần đang chờ trong buffer,
-    // tránh nạp cả file vào RAM cùng lúc (pipeline theo từng chunk).
     if (m_socket->bytesToWrite() == 0) {
         sendNextChunk();
     }
@@ -107,9 +101,6 @@ void FileUploadTask::sendNextChunk()
     }
 
     if (m_file->atEnd()) {
-        // Đợi bytesWritten() báo buffer đã flush hết trước khi coi là xong,
-        // để không cắt kết nối lúc dữ liệu còn nằm trong buffer gửi.
-        // Nếu buffer đã trống ngay (file nhỏ), xử lý luôn tại đây.
         if (m_socket->bytesToWrite() == 0) {
             finishSuccess();
         }
