@@ -7,14 +7,14 @@
 #include <QUrl>
 
 namespace {
-constexpr qint64 kChunkSize = 64 * 1024;      // đọc/gửi 64KB mỗi lần
-constexpr int kProgressIntervalMs = 150;      // throttle tín hiệu progress
+constexpr qint64 kChunkSize = 64 * 1024;      
+constexpr int kProgressIntervalMs = 150;    
 }
 
 UploadWorker::UploadWorker(const QString &filePath, const QString &host, quint16 port)
     : m_filePath(filePath), m_host(host), m_port(port)
 {
-    setAutoDelete(true); // QThreadPool tự xóa worker sau khi run() xong
+    setAutoDelete(true); 
 }
 
 void UploadWorker::cancel()
@@ -24,7 +24,6 @@ void UploadWorker::cancel()
 
 QString UploadWorker::percentEncodeFileName(const QString &name)
 {
-    // percent-encode giống encode URL, tránh lỗi khoảng trắng / tiếng Việt / ký tự đặc biệt
     return QUrl::toPercentEncoding(name);
 }
 
@@ -52,7 +51,6 @@ void UploadWorker::run()
         return;
     }
 
-    // ---- Gửi header: ULD1 <ten_encoded> <kich_thuoc>\n ----
     const QByteArray header = QStringLiteral("ULD1 %1 %2\n")
                                    .arg(percentEncodeFileName(fileName))
                                    .arg(fileSize)
@@ -64,7 +62,6 @@ void UploadWorker::run()
         return;
     }
 
-    // ---- Gửi dữ liệu file theo từng chunk, tự cập nhật % và tốc độ ----
     qint64 bytesSent = 0;
     QElapsedTimer speedTimer;
     QElapsedTimer progressTimer;
@@ -105,7 +102,6 @@ void UploadWorker::run()
         bytesSent += readBytes;
         bytesSinceLastTick += readBytes;
 
-        // Throttle: chỉ emit progress mỗi ~150ms để không làm nghẽn GUI thread
         if (progressTimer.elapsed() >= kProgressIntervalMs || bytesSent == fileSize) {
             const double elapsedSec = speedTimer.elapsed() / 1000.0;
             const double speed = elapsedSec > 0 ? bytesSinceLastTick / elapsedSec : 0.0;
