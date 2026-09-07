@@ -1,0 +1,13 @@
+#include <QApplication>
+#include "ServerWindow.h"
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    app.setApplicationName(QStringLiteral("UDM_10 Server"));
+
+    ServerWindow window;
+    window.show();
+
+    return app.exec();
+}
