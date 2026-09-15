@@ -1,60 +1,60 @@
 #pragma once
-
 #include <QMainWindow>
+#include <QTcpSocket>
+#include <QFile>
 #include <QMap>
-#include <QVector>
 
 QT_BEGIN_NAMESPACE
 class QLineEdit;
 class QPushButton;
 class QTableWidget;
 class QProgressBar;
-class QSpinBox;
-class QLabel;
 QT_END_NAMESPACE
 
-class FileUploadTask;
+const int MAX_CONCURRENT_UPLOADS = 2;
 
-class ClientWindow : public QMainWindow
+struct UploadInfo {
+    QString filePath;
+    qint64 fileSize = 0;
+    qint64 sent = 0;
+    QFile *file = nullptr;
+    int row = -1;
+
+    qint64 lastTickMs = 0;
+    qint64 sentSinceLastTick = 0;
+};
+
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
-    explicit ClientWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
 private slots:
-    void onAddFilesClicked();
-    void onStartAllClicked();
-    void onClearFinishedClicked();
+    void chooseFiles();
+    void uploadAll();
+    void socketConnected();
+    void socketBytesWritten(qint64 bytes);
+    void socketError();
 
 private:
-    struct FileRow {
-        QString filePath;
-        FileUploadTask *task = nullptr;
-        QProgressBar *progressBar = nullptr;
-        int rowIndex = -1;
-        bool started = false;
-        bool finished = false;
-    };
+    QLineEdit *hostEdit;
+    QLineEdit *portEdit;
+    QPushButton *chooseBtn;
+    QPushButton *uploadBtn;
+    QTableWidget *table;
 
-    void setupUi();
-    void addFileToQueue(const QString &filePath);
-    void tryStartNextTasks();
-    void startTaskForRow(int row);
+    QStringList pendingFiles;
+    QList<int> pendingRows; 
+    QMap<QTcpSocket*, UploadInfo> uploads;
+    int runningCount = 0;    
 
-    QLineEdit *m_hostEdit = nullptr;
-    QLineEdit *m_portEdit = nullptr;
-    QSpinBox *m_maxConcurrentSpin = nullptr;
-    QPushButton *m_addFilesBtn = nullptr;
-    QPushButton *m_startAllBtn = nullptr;
-    QPushButton *m_clearFinishedBtn = nullptr;
-    QLabel *m_dropHintLabel = nullptr;
-    QTableWidget *m_table = nullptr;
-
-    QVector<FileRow> m_rows;
-    int m_runningCount = 0;
+    void addFileRow(const QString &path);
+    void tryStartNext(); 
+    void startUpload(const QString &path, int row);
+    void sendNextChunk(QTcpSocket *socket);
 };
