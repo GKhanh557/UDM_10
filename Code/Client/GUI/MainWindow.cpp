@@ -129,8 +129,7 @@ void MainWindow::startUpload(const QString &path, int row)
 
     connect(socket, &QTcpSocket::connected, this, &MainWindow::socketConnected);
     connect(socket, &QTcpSocket::bytesWritten, this, &MainWindow::socketBytesWritten);
-    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
-            this, &MainWindow::socketError);
+    connect(socket, &QAbstractSocket::errorOccurred, this, &ClientWindow::socketError);
 
     table->item(row, 1)->setText("Dang ket noi...");
     socket->connectToHost(hostEdit->text(), portEdit->text().toUShort());
