@@ -9,6 +9,7 @@ QT_BEGIN_NAMESPACE
 class QLineEdit;
 class QPushButton;
 class QListWidget;
+class QCloseEvent;      
 QT_END_NAMESPACE
 
 // Struct nhỏ lưu thông tin đang nhận file của 1 client
