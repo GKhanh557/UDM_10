@@ -4,6 +4,6 @@ CONFIG += c++17
 TARGET = UDM10_Client
 TEMPLATE = app
 
-SOURCES += main.cpp MainWindow.cpp
-HEADERS += MainWindow.h ../Shared/ProtocolCommon.h
+SOURCES += main.cpp ClientWindow.cpp
+HEADERS += ClientWindow.h ../Shared/ProtocolCommon.h
 INCLUDEPATH += ../Shared
