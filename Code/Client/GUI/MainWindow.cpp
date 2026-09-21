@@ -1,4 +1,4 @@
-#include "MainWindow.h"
+#include "ClientWindow.h"
 #include "../Shared/ProtocolCommon.h"
 
 #include <QVBoxLayout>
@@ -15,7 +15,7 @@
 #include <QMimeData>
 #include <QDateTime>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
+ClientWindow::ClientWindow(QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle("UDM_10 - Client");
     resize(700, 450);
@@ -51,17 +51,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     setCentralWidget(central);
 
-    connect(chooseBtn, &QPushButton::clicked, this, &MainWindow::chooseFiles);
-    connect(uploadBtn, &QPushButton::clicked, this, &MainWindow::uploadAll);
+    connect(chooseBtn, &QPushButton::clicked, this, &ClientWindow::chooseFiles);
+    connect(uploadBtn, &QPushButton::clicked, this, &ClientWindow::uploadAll);
 }
 
-void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+void ClientWindow::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->mimeData()->hasUrls())
         event->acceptProposedAction();
 }
 
-void MainWindow::dropEvent(QDropEvent *event)
+void ClientWindow::dropEvent(QDropEvent *event)
 {
     for (const QUrl &url : event->mimeData()->urls()) {
         QString path = url.toLocalFile();
@@ -70,14 +70,14 @@ void MainWindow::dropEvent(QDropEvent *event)
     }
 }
 
-void MainWindow::chooseFiles()
+void ClientWindow::chooseFiles()
 {
     QStringList files = QFileDialog::getOpenFileNames(this, "Chon file");
     for (const QString &f : files)
         addFileRow(f);
 }
 
-void MainWindow::addFileRow(const QString &path)
+void ClientWindow::addFileRow(const QString &path)
 {
     int row = table->rowCount();
     table->insertRow(row);
@@ -94,7 +94,7 @@ void MainWindow::addFileRow(const QString &path)
     pendingRows.append(row);
 }
 
-void MainWindow::uploadAll()
+void ClientWindow::uploadAll()
 {
     // Chi cho phep toi da MAX_CONCURRENT_UPLOADS file chay cung luc,
     // file con lai nam trong hang doi (pendingFiles), trang thai van la "Cho"
@@ -103,7 +103,7 @@ void MainWindow::uploadAll()
     }
 }
 
-void MainWindow::tryStartNext()
+void ClientWindow::tryStartNext()
 {
     if (pendingFiles.isEmpty())
         return;
@@ -114,28 +114,44 @@ void MainWindow::tryStartNext()
     startUpload(path, row);
 }
 
-void MainWindow::startUpload(const QString &path, int row)
+void ClientWindow::startUpload(const QString &path, int row)
 {
-    QTcpSocket *socket = new QTcpSocket(this);
-
     UploadInfo info;
     info.filePath = path;
     info.fileSize = QFileInfo(path).size();
     info.file = new QFile(path);
-    info.file->open(QIODevice::ReadOnly);
     info.row = row;
 
+    // Kiem tra file co mo duoc khong (co the loi neu file bi xoa/mat quyen truy cap
+    // giua luc them vao danh sach va luc bat dau upload)
+    if (!info.file->open(QIODevice::ReadOnly)) {
+        table->item(row, 1)->setText("Loi: khong mo duoc file");
+        delete info.file;
+        runningCount--;
+        tryStartNext();
+        return;
+    }
+
+    QTcpSocket *socket = new QTcpSocket(this);
     uploads[socket] = info;
 
-    connect(socket, &QTcpSocket::connected, this, &MainWindow::socketConnected);
-    connect(socket, &QTcpSocket::bytesWritten, this, &MainWindow::socketBytesWritten);
+    connect(socket, &QTcpSocket::connected, this, &ClientWindow::socketConnected);
+    connect(socket, &QTcpSocket::bytesWritten, this, &ClientWindow::socketBytesWritten);
+    // Qt6 doi ten tin hieu bao loi tu "error" (Qt5) thanh "errorOccurred"
     connect(socket, &QAbstractSocket::errorOccurred, this, &ClientWindow::socketError);
 
     table->item(row, 1)->setText("Dang ket noi...");
     socket->connectToHost(hostEdit->text(), portEdit->text().toUShort());
+
+    // Neu qua CONNECT_TIMEOUT_MS ma van chua ket noi duoc thi huy, tranh treo vo han
+    QTimer::singleShot(CONNECT_TIMEOUT_MS, this, [this, socket]() {
+        if (uploads.contains(socket) && socket->state() != QAbstractSocket::ConnectedState) {
+            failUpload(socket, "Qua thoi gian cho ket noi (timeout)");
+        }
+    });
 }
 
-void MainWindow::socketConnected()
+void ClientWindow::socketConnected()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
     if (!socket || !uploads.contains(socket))
@@ -152,7 +168,7 @@ void MainWindow::socketConnected()
     sendNextChunk(socket);
 }
 
-void MainWindow::sendNextChunk(QTcpSocket *socket)
+void ClientWindow::sendNextChunk(QTcpSocket *socket)
 {
     UploadInfo &info = uploads[socket];
 
@@ -179,7 +195,7 @@ void MainWindow::sendNextChunk(QTcpSocket *socket)
     }
 }
 
-void MainWindow::socketBytesWritten(qint64 bytes)
+void ClientWindow::socketBytesWritten(qint64 bytes)
 {
     Q_UNUSED(bytes);
     QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
@@ -208,21 +224,30 @@ void MainWindow::socketBytesWritten(qint64 bytes)
     sendNextChunk(socket);
 }
 
-void MainWindow::socketError()
+void ClientWindow::socketError()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
     if (!socket || !uploads.contains(socket))
         return;
+    failUpload(socket, socket->errorString());
+}
+
+void ClientWindow::failUpload(QTcpSocket *socket, const QString &reason)
+{
+    if (!uploads.contains(socket))
+        return;
 
     UploadInfo &info = uploads[socket];
-    // Loi 1 file khong lam dung cac file khac, chi bao loi dong nay
-    table->item(info.row, 1)->setText("Loi: " + socket->errorString());
+    // Loi 1 file (timeout hoac loi socket) khong lam dung cac file khac, chi bao loi dong nay
+    table->item(info.row, 1)->setText("Loi: " + reason);
     table->item(info.row, 3)->setText("-");
     if (info.file) {
         info.file->close();
         delete info.file;
     }
     uploads.remove(socket);
+    socket->abort(); // giai phong socket ngay, khong cho cho them
+    socket->deleteLater();
 
     // 1 file loi cung tinh la het slot, lay file ke tiep trong hang doi ra chay
     runningCount--;
